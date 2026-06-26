@@ -18,9 +18,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Konara Marketplace API", version="1.0.0", lifespan=lifespan)
 
+# Serve React frontend in production
+import os
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+if FRONTEND_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIR / "assets")), name="assets")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "https://*.onrender.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -39,7 +49,22 @@ app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 
 @app.get("/")
 async def root():
+    if FRONTEND_DIR.exists():
+        return FileResponse(str(FRONTEND_DIR / "index.html"))
     return {"message": "Konara Marketplace API", "status": "running"}
+
+
+# Catch-all for React Router (serve index.html for all non-API routes)
+@app.get("/{path:path}")
+async def serve_frontend(path: str):
+    if path.startswith("api/"):
+        return {"error": "Not found"}
+    if FRONTEND_DIR.exists():
+        file_path = FRONTEND_DIR / path
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(str(file_path))
+        return FileResponse(str(FRONTEND_DIR / "index.html"))
+    return {"message": "API only mode"}
 
 
 if __name__ == "__main__":
