@@ -10,7 +10,7 @@ WORKDIR /app
 
 # Install backend dependencies
 COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt certifi
+RUN pip install --no-cache-dir -r requirements.txt certifi "bcrypt==4.2.1"
 
 # Copy backend
 COPY backend/ ./backend/
