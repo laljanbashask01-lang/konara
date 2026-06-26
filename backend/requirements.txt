@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-dotenv
+motor
+pydantic[email]
+passlib[bcrypt]
+python-jose[cryptography]
+httpx
+redis
+cloudinary
+razorpay
+python-multipart
+websockets
